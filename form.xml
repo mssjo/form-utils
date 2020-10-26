@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<language name="FORM" version="1" kateversion="5.55" section="Scientific" extensions="*.frm;*.hf;.prc">
+
+    <highlighting>
+        <list name="DefKeywords">
+            <item>s</item>
+            <item>symbol</item>
+            <item>symbols</item>
+            
+            <item>v</item>
+            <item>vector</item>
+            <item>vectors</item>
+            
+            <item>i</item>
+            <item>index</item>
+            <item>indices</item>
+            
+            <item>f</item>
+            <item>function</item>
+            <item>functions</item>
+            
+            <item>cf</item>
+            <item>cfunction</item>
+            <item>cfunctions</item>
+            <item>commuting</item>
+            
+            <item>t</item>
+            <item>tensor</item>
+            <item>tensors</item>
+            <item>ct</item>
+            <item>ctensor</item>
+            <item>ctensors</item>
+            <item>nt</item>
+            <item>ntensor</item>
+            <item>ntensors</item>
+        </list>
+        <list name="ExprKeywords">
+            <item>l</item>
+            <item>local</item>
+            
+            <item>g</item>
+            <item>global</item>
+        </list>
+        <contexts>
+            <context name="StartExpr" attribute="Normal" lineEndContext="#stay" fallthrough="true" fallthroughContext="Statement">
+                <keyword String="DefKeywords" attribute="DefKeyword" context="Definition" />
+                <keyword String="ExprKeywords" attribute="ExprKeyword" context="Definition" />
+                <WordDetect String="set" insensitive="true" attribute="Set" context="Definition" />
+                <DetectChar char="." attribute="Module" context="Module" />
+                <DetectChar char="*" column="0" attribute="Comment" context="Comment" />
+                <DetectChar char=";" attribute="Normal" context="StartExpr" />
+                <DetectChar char="`" attribute="PreprocVar" context="PreprocVar" />
+                <RegExpr String="#\w*" attribute="Preprocessor" context="Preprocessor" />
+                <RegExpr String="\s+" attribute="Normal" context="#stay" />
+            </context>
+            <context name="Normal" attribute="Normal" lineEndContext="#stay" >
+                <DetectChar char="*" column="0" attribute="Comment" context="Comment" />
+                <DetectChar char="`" attribute="PreprocVar" context="PreprocVar" />
+                <DetectChar char="[" attribute="FormalName" context="FormalName" />
+                <DetectChar char="&quot;" attribute="String" context="String" />
+                <DetectChar char=";" attribute="Normal" context="StartExpr" />
+                <RegExpr String="[a-z][a-z0-9_]*_(?!\w)" insensitive="true" attribute="Builtin" context="#stay" />
+                <RegExpr String="\w+\?" attribute="Wildcard" context="#stay" />
+                <RegExpr String="\?\w+" attribute="ArgWildcard" context="#stay" />
+                <RegExpr String="#\w*" attribute="Preprocessor" context="Preprocessor" />
+                <Int attribute="Integer" context="#stay" />
+                <AnyChar String="+-*/%^=()" attribute="Operator" context="#stay" />
+            </context>
+            <context name="Preprocessor" attribute="Normal" lineEndContext="#pop" >
+                <DetectChar char="`" attribute="PreprocVar" context="PreprocVar" />
+                <DetectChar char="[" attribute="FormalName" context="FormalName" />
+                <DetectChar char="&quot;" attribute="String" context="String" />
+                <RegExpr String="[a-z][a-z0-9_]*_(?!\w)" insensitive="true" attribute="Builtin" context="#stay" />
+                <Int attribute="Integer" context="#stay" />
+                <AnyChar String="+-*/%^=()" attribute="Operator" context="#stay" />
+                <RegExpr String="\\\s*\n" attribute="Normal" context="#stay" />
+            </context>
+            <context name="Statement" attribute="Statement" lineEndContext="Normal">
+                <DetectChar char=";" attribute="Normal" context="StartExpr" />
+                <DetectChar char="(" attribute="Normal" context="Normal" />
+                <RegExpr String="\s+" attribute="Normal" context="Normal" />
+            </context>
+            <context name="Comment" attribute="Comment" lineEndContext="#pop" >
+            </context>
+            <context name="FormalName" attribute="FormalName" lineEndContext="#pop" >
+                <DetectChar char="[" attribute="FormalName" context="FormalName" />
+                <DetectChar char="]" attribute="FormalName" context="#pop" />
+                <DetectChar char="`" attribute="PreprocVar" context="PreprocVar" />
+            </context>
+            <context name="Definition" attribute="Definition" lineEndContext="#stay" >
+                <DetectChar char=";" attribute="Normal" context="StartExpr" />
+                <DetectChar char="[" attribute="FormalName" context="FormalName" />
+                <DetectChar char="=" attribute="Normal" context="Normal" />
+                <DetectChar char="`" attribute="PreprocVar" context="PreprocVar" />
+            </context>
+            <context name="Module" attribute="Module" lineEndContext="StartExpr" >
+                <DetectChar char=":" attribute="Normal" context="ModuleMessage" />
+                <DetectChar char=";" attribute="Normal" context="StartExpr" />
+            </context>
+            <context name="ModuleMessage" attribute="String" lineEndContext="#stay" >
+                <DetectChar char=";" attribute="Normal" context="#pop" />
+                <DetectChar char="`" attribute="PreprocVar" context="PreprocVar" />
+            </context>
+            <context name="PreprocVar" attribute="PreprocVar" lineEndContext="#pop" >
+                <DetectChar char="`" attribute="PreprocVar" context="PreprocVar"/>
+                <DetectChar char="'" attribute="PreprocVar" context="#pop"/>
+            </context>
+            <context name="String" attribute="String" lineEndContext="#stay" >
+                <DetectChar char="&quot;" attribute="String" context="#pop"/>
+                <Detect2Chars char="\" char1="&quot;" attribute="String" context="#stay" />
+                <DetectChar char="`" attribute="PreprocVar" context="PreprocVar" />
+            </context>
+        </contexts>
+        <itemDatas>
+            <itemData name="Normal"         defStyleNum="dsNormal"      />
+            <itemData name="Definition"     defStyleNum="dsNormal"      />
+            <itemData name="Comment"        defStyleNum="dsComment"     />
+            <itemData name="Statement"      defStyleNum="dsFunction"    />
+            <itemData name="Module"         defStyleNum="dsControlFlow" />
+            <itemData name="Set"            defStyleNum="dsAttribute"   />
+            <itemData name="DefKeyword"     defStyleNum="dsVariable"    />
+            <itemData name="ExprKeyword"    defStyleNum="dsExtension"   />
+            <itemData name="Preprocessor"   defStyleNum="dsPreprocessor"/>
+            <itemData name="PreprocVar"     defStyleNum="dsConstant"    />
+            <itemData name="String"         defStyleNum="dsString"      />
+            <itemData name="FormalName"     defStyleNum="dsVariable"    />
+            <itemData name="Builtin"        defStyleNum="dsBuiltIn"     />
+            <itemData name="Wildcard"       defStyleNum="dsChar"        />
+            <itemData name="ArgWildcard"    defStyleNum="dsSpecialChar" />
+            <itemData name="Operator"       defStyleNum="dsOperator"    />
+            <itemData name="Integer"        defStyleNum="dsDecVal"      /> 
+        </itemDatas>
+    </highlighting>
+
+    <general>
+        <comments>
+            <comment name="singleLine" start="*"/>
+        </comments>
+        <keywords casesensitive="0"/>
+        <emptyLines>
+            <emptyLine regexpr="\s+"/>
+        </emptyLines>
+    </general>
+    
+</language>
