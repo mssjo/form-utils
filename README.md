@@ -1,4 +1,4 @@
-## form-utils
+# form-utils
 Useful accessories to Jos Vermaseren's computer algebra system FORM.
 (See https://www.nikhef.nl/~form/ for information about FORM.)
 
@@ -6,7 +6,7 @@ FORM is wonderful and powerful, but sometimes a bit inconvenient to
 use. As an avid FORM user, I have started to make some custom things
 to make its use a bit smoother.
 
-# Syntax highlighting
+## Syntax highlighting
 As far as I know, the only editor in widespread use that supports
 FORM syntax highlighing is Vim. GitHub doesn't recognise it, but
 someday I dream of adding it to Linguist. For Gnome-based editors, 
