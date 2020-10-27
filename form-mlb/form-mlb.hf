@@ -1,0 +1,3 @@
+function [multibracket];
+
+#define multibracket "multiply left [multibracket]; bracket [multibracket] "
