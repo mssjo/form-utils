@@ -5,8 +5,11 @@
 #include <list>
 #include <unordered_map>
 
+//Multibracket tag (special symbol output by FORM macro)
 #define MULTIBRACKET "[_MULTIBRACKET_]"
+//Escaped version for regexes
 #define REG_MULTIBRACKET "\\[_MULTIBRACKET_\\]"
+//Matches FORM's indentation as of 4.2
 #define INDENT(lvl) std::string(lvl*3 + 6, ' ')
 
 using str = std::string;
@@ -93,26 +96,35 @@ public:
 };
 
 /* 
- * Splits a string at all occurrences of a delimiter.
- * (why isn't there a std method for this?)
+ * Splits a string at all occurrences of a delimiter delim,
+ * except when it occurs between (possibly nested) parentheses lpar, rpar.
+ * Unbalanced parentheses and empty substrings are ignored.
  */
-list split(const str& s, const str& delim)
+list split(const str& s, char delim, char lpar, char rpar)
 {
-    list tokens;
-    size_t prev = 0, pos = 0;
-    do{
-        pos = s.find(delim, prev);
-        if(pos == str::npos) 
-            pos = s.length();
-        
-        str token = s.substr(prev, pos-prev);
-        if(!token.empty()) 
-            tokens.push_back(token);
-        
-        prev = pos + delim.length();
-    } while (pos < s.length() && prev < s.length());
+    list split;
+    size_t prev = 0, par = 0;
+    for(size_t pos = 0; pos <= s.length(); pos++){
+        //End-of-string always counts as delimiter, 
+        //otherwise delimiters count if not parenthesised
+        if(pos == s.length() || (par == 0 && s[pos] == delim)){
+            str sub = s.substr(prev, pos-prev);
+            //Ignore empty substrings
+            if(!sub.empty())
+                split.push_back(sub);
+            
+            prev = pos+1;
+        }
+        //left paren increases parenthetisation level
+        else if(s[pos] == lpar)
+            par++;
+        //ignore right paren if parenthetisation would be negative
+        else if(par > 0 && s[pos] == rpar)
+            par--;
+        //also ignore unclosed parens -- this is not a parenthetisation checker!
+    }
     
-    return tokens;
+    return split;
 }
 
 /*
@@ -189,7 +201,7 @@ void print_bracket(size_t b_lvl, size_t i_lvl,
             if(!match[1].str().empty()){
                 //Iterate over all bracketed symbols, separate those that should go at this
                 //level of bracketing from the rest (key and val, respectively)
-                for(str& symbol : split(match[2], "*")){
+                for(str& symbol : split(match[2], '*', '[', ']')){
                     bool bracket_match = false;
                     for(const str& br : br_symb[b_lvl]){
                         //Keep any function arguments applied to the symbols;
@@ -288,7 +300,7 @@ int main(int argc, const char** argv){
     //Parse the bracket specifications
     std::vector<list> br_symb( argc-1 );
     for(int arg = 1; arg < argc; arg++){
-        br_symb[arg-1] = split(str(argv[arg]), ",");
+        br_symb[arg-1] = split(str(argv[arg]), ',', '[', ']');
     }
     
     list lines;
