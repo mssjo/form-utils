@@ -88,5 +88,3 @@ All symbols that are supplied to the extermal multibracket command must also
 be supplied as arguments to the`` `multibracket'`` macro. All FORM output that
 is not affected by the macro is printed without being changed. All `print` options
 (`+s` etc) are supported, but not options and abbreviations of `bracket`.
-Also, formal names of bracketed symbols may currently not include commas or 
-asterisks (this may be fixed in the future).
