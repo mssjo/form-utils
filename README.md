@@ -19,11 +19,11 @@ $HOME/.local/share/org.kde.syntax-highlighting/syntax/
 ```
 and you're good to go: FORM will show up under the "scientific"
 language category in any editor/IDE that uses Katepart as the
-underlying text editor. This won't automatically make the editor
-recognise .frm and .prc files as FORM, but you can do that yourself
-if you wish. (FORM doesn't even specify the extension used for header
-files, but I follow the convention .hf to avoid confusion with regular
-C/C++ header files.)
+underlying text editor. This will also make the editor automatically
+recognise `.frm` and `.prc` files as FORM files, as well as `.hf`,
+which is one possible convention for FORM header files (FORM doesn't
+specify the extension for these, but `.hf` makes for easier distinction
+from C header files).
 
 ## Multibrackets
 FORM's bracket command is great for increasing the readability of the
