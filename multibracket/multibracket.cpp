@@ -127,6 +127,10 @@ list split(const str& s, char delim, char lpar, char rpar)
     return split;
 }
 
+str regex_escape(const str& s){
+    return regex_replace(s, std::regex("\\+|\\*|\\?|\\(|\\)|\\[|\\]|\\{|\\}|\\.|\\^|\\$|\\\\|\\|"), "\\$&");
+}
+
 /*
  * This is the central method for printing multibrackets. It recursively
  * extracts bracketed symbols, prints them, and applies itself to the
@@ -194,7 +198,7 @@ void print_bracket(size_t b_lvl, size_t i_lvl,
     std::smatch match;
     for(const str& line : lines){
         //If we match a line tagged as a multibracket...
-        if( std::regex_match(line, match, std::regex("\\s+\\+ " REG_MULTIBRACKET "(\\*(.*))? \\* \\(\\s*")) ){
+        if( std::regex_match(line, match, std::regex("\\s+\\+ " REG_MULTIBRACKET "(\\*(.*))? \\* \\(.*")) ){
             key = "", val = "";
             
             //If there are bracket symbols besides the multibracket tag...
@@ -222,7 +226,7 @@ void print_bracket(size_t b_lvl, size_t i_lvl,
             }
             //Prepare line for recursive call, using the same format as the input
             if(b_lvl < br_symb.size() - 1)
-                brackets[key].push_back(" + " MULTIBRACKET +  val + " * (");
+                brackets[key].push_back(" + " MULTIBRACKET +  val + " * (" + match[3].str());
 
         }
         //If the line contains an expression, add it to the lines to be treated
@@ -301,6 +305,10 @@ int main(int argc, const char** argv){
     std::vector<list> br_symb( argc-1 );
     for(int arg = 1; arg < argc; arg++){
         br_symb[arg-1] = split(str(argv[arg]), ',', '[', ']');
+        for(str& br : br_symb[arg-1]){
+            br = regex_escape(br);
+            std::cout << br << "\n";
+        }
     }
     
     list lines;
