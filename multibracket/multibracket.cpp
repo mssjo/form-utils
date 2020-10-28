@@ -61,14 +61,14 @@ public:
             return where->second->second;
         }
         else if(key.empty()){
-            //creates new element in front
+            //create new element in front
             elements.push_front( std::make_pair(key, list()) );
             return (index_map[key] = elements.begin())->second;
         }
         else{
-            //creates new element in back
+            //create new element in back
             elements.push_back( std::make_pair(key, list()) );
-            return (index_map[key] = --(elements.end()))->second;
+            return (index_map[key] = --elements.end())->second;
         }           
     }
     
@@ -182,8 +182,7 @@ void print_bracket(size_t b_lvl, size_t i_lvl,
     std::smatch match;
     for(const str& line : lines){
         //If we match a line tagged as a multibracket...
-        if( std::regex_match(line, match, std::regex(REG_MULTIBRACKET "(\\*(.*))? \\* ")) ){
-            
+        if( std::regex_match(line, match, std::regex("\\s+\\+ " REG_MULTIBRACKET "(\\*(.*))? \\* \\(\\s*")) ){
             key = "", val = "";
             
             //If there are bracket symbols besides the multibracket tag...
@@ -225,6 +224,8 @@ void print_bracket(size_t b_lvl, size_t i_lvl,
         //Other lines are just ignored; they contain parentheses and spaces, which
         //will be rebuilt when printing
     }
+    
+    //Now, we print and recurse!
     
     //Treat brackets with multiple contents differently
     if(brackets.size() > 1){
@@ -301,14 +302,17 @@ int main(int argc, const char** argv){
             
             //If the expression contains at least one multibracket tag, 
             //it is acutally a multibracket expression
-            if(line.find(MULTIBRACKET) != str::npos)
+            if(!multibracket && line.find(MULTIBRACKET) != str::npos){
                 multibracket = true;
+            }
+            
             
             //Expressions are semicolon-terminated
             if(line.find(";") != str::npos){
-                if(multibracket)
+                if(multibracket){
                     //Print multibracket
                     print_bracket(0, 0, true, true, lines, br_symb);
+                }
                 else{
                     //Ordinary expressions (i.e. not multibracketed)
                     //are just printed verbatim
