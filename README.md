@@ -87,4 +87,10 @@ same level of indentation by commas, and those on different levels by spaces.
 All symbols that are supplied to the extermal multibracket command must also
 be supplied as arguments to the`` `multibracket'`` macro. All FORM output that
 is not affected by the macro is printed without being changed. All `print` options
-(`+s` etc) are supported, but not options and abbreviations of `bracket`.
+(`+s` etc) are supported, but not options and abbreviations of `bracket`, nor
+`antibracket`.
+
+The tags needed for multibracket formatting are not automatically removed.
+You need to use the macro `` `nmultibracket'``, which works as an executable 
+satement, to remove them so that expressions can subsequently be printed
+without multibracketing, if you so wish.

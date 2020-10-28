@@ -12,3 +12,5 @@
 function [_MULTIBRACKET_];
 
 #define multibracket "multiply left [_MULTIBRACKET_]; bracket [_MULTIBRACKET_] "
+
+#define nmultibracket "id [_MULTIBRACKET_] = 1"
