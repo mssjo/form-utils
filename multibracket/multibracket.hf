@@ -1,0 +1,14 @@
+*
+* multibracket.hf 
+* by Mattias Sjö, 2020
+*
+* Include into a FORM program at a point where declaration statements 
+* are allowed to enable the multibracket feature. To use, replace bracket 
+* statments with `multibracket' (otherwise exactly the same usage, but +- 
+* and abbreviations not allowed) and pass FORM output through the program
+* "multibracket". Regular brackets will not be affected.
+*
+
+function [_MULTIBRACKET_];
+
+#define multibracket "multiply left [_MULTIBRACKET_]; bracket [_MULTIBRACKET_] "
