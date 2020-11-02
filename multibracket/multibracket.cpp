@@ -1,194 +1,16 @@
 #include <iostream>
-#include <regex>
 #include <string>
 #include <functional>
 #include <algorithm>
-#include <list>
 #include <cstring>
-#include <unordered_map>
-#include <memory>
+
+#include "insertion_order_map.hpp"
+#include "indent_stream.hpp"
 
 //Multibracket tag (special symbol output by FORM macro)
 #define MULTIBRACKET "       + [_MULTIBRACKET_]"
 
 using list = typename std::list<std::string>;
-
-/*
- * A simple ordered map type with the feature that elements are ordered
- * not by some comparison function, but by the order in which they were
- * inserted.
- * 
- * This is by no means an STL-compliant container; I have just implemented
- * the minimal functionality ad-hoc to allow the function to preserve
- * FORM's ordering conventions, which are based on information not present
- * in the output.
- * 
- * (Sometime in the future, it would maybe be fun to extend it to a full
- * STL-compliant container. It wouldn't be too hard; it's mainly a matter
- * of writing all the boilerplate.)
- */
-template< typename key_type, typename val_type, class Hash = std::hash<key_type> >
-class insertion_order_map {
-private:
-    
-    /* 
-     * The structure is a val_type of key-value pairs, where elements are
-     * added to the end, except for those with empty keys, which are
-     * added to the beginning. Map-ness is implemented via a map
-     * from keys to key-value-val_type iterators, which act as indices
-     * to the corresponding location in the val_type (i.e. they are never
-     * iterated). The benefit is that iterator lookup is constant-time
-     * in a std::list, and that they are not invalidated by changes to the
-     * val_type.
-     */ 
-    using key_val_list = typename std::list< std::pair<key_type, val_type> >;
-    key_val_list elements;
-    std::unordered_map<key_type, typename key_val_list::iterator, Hash> map;
-    
-public:
-    
-    /* 
-     * These are the methods needed for the functionality of this
-     * program. They act exactly like the corresponding methods
-     * of STL map types.
-     */
-    
-    val_type& operator[] (const key_type& key){
-        auto where = map.find(key);
-        if(where != map.end()){
-            //where = {key, iterator to {key, val}} so the expression below is val
-            return where->second->second;
-        }
-        else if(key.empty()){
-            //create new element in front
-            elements.push_front( std::make_pair(key, val_type()) );
-            return (map[key] = elements.begin())->second;
-        }
-        else{
-            //create new element in back
-            elements.push_back( std::make_pair(key, val_type()) );
-            return (map[key] = --elements.end())->second;
-        }           
-    }
-    
-    size_t size() const {
-        return elements.size();
-    }
-    bool empty() const {
-        return elements.empty();
-    }
-    void clear() {
-        elements.clear();
-        map.clear();
-    }
-    
-    typename key_val_list::iterator find(const key_type& key){
-        //where already points to the desired iterator; we just have to wrap "end"
-        auto where = map.find(key);
-        if(where != map.end())
-            return where->second;
-        else
-            return end();
-    }
-    typename key_val_list::iterator begin() {
-        return elements.begin();
-    }
-    typename key_val_list::iterator end() {
-        return elements.end();
-    }
-    typename key_val_list::const_iterator begin() const {
-        return elements.begin();
-    }
-    typename key_val_list::const_iterator end() const {
-        return elements.end();
-    }
-    typename key_val_list::const_iterator cbegin() const {
-        return elements.cbegin();
-    }
-    typename key_val_list::const_iterator cend() const {
-        return elements.cend();
-    }
-};
-
-class indent_buf : public std::stringbuf {
-private:
-    static const size_t max_depth = 79;
-    static const size_t par_indent = 6;
-    static const size_t basic_indent = 8;
-    static const size_t indent_step = 3;
-    
-    size_t depth;
-    size_t indent_level;
-    
-    void indent_line(bool par = false){
-        depth = (par ? par_indent : basic_indent) + indent_level*indent_step;
-                
-        if(depth > max_depth)
-            throw std::runtime_error("ERROR: indent larger than maximum depth");
-        
-        std::cout << std::string(depth, ' ');
-    }
-public:
-    indent_buf(size_t ind = 0) : indent_level(ind) {
-        indent_line();
-    }
-    
-    virtual int sync(){
-        std::string s = str();
-        
-        for(size_t i = 0; i < s.length(); i++){
-            if(depth > max_depth || s[i] == '\n'){
-                std::cout.put('\n');
-                indent_line();
-                
-                if(s[i] == '\n')
-                    continue;
-            }  
-            
-            std::cout.put(s[i]);
-            depth++;
-            
-        }
-        
-        str("");        
-    }
-    
-    void paragraph(){
-        sync();
-        std::cout.put('\n');
-        indent_line(true);
-    }
-    
-    void incr_indent(size_t incr){
-        indent_level += incr;
-    }
-    void decr_indent(size_t decr){
-        if(indent_level < decr)
-            throw std::runtime_error("ERROR: negative indent");
-            
-        indent_level -= decr;
-    }
-};
-class indent_stream : public std::ostream {
-public:
-    indent_stream(size_t indent = 0) : std::ostream(new indent_buf(indent)) {}
-    virtual ~indent_stream() {
-        delete rdbuf();
-    }
-    
-    indent_stream& paragraph(){ 
-        static_cast<indent_buf*>(rdbuf())->paragraph();   
-        return *this; 
-    }
-    indent_stream& incr_indent(size_t incr = 1){ 
-        static_cast<indent_buf*>(rdbuf())->incr_indent(incr); 
-        return *this; 
-    }
-    indent_stream& decr_indent(size_t decr = 1){ 
-        static_cast<indent_buf*>(rdbuf())->decr_indent(decr); 
-        return *this; 
-    }
-};
 
 /* 
  * Splits a string s at all occurrences of a delimiter delim,
@@ -236,7 +58,7 @@ std::string read_broken_line(std::string& line, size_t& pos){
         start++;
     
     //Line is not actually broken, return empty string
-    if(start == line.length()){
+    if(start >= line.length()){
         pos = 0;
         std::getline(std::cin, line);
         
@@ -266,7 +88,6 @@ std::string read_broken_line(std::string& line, size_t& pos){
             if(pos < line.length() && is_plusminus(line[pos]))
                 full_line += ' ';
         }
-//         std::cout <<  line[pos];
         
         //Handle formal names
         if(line[pos] == '[')
@@ -295,13 +116,15 @@ std::string read_broken_line(std::string& line, size_t& pos){
 
 void read_multiple_lines(std::string& line, size_t& pos, list& lines){
     for(;;){
-        while(std::isspace(line[pos]))
+        while(pos < line.length() && std::isspace(line[pos]))
             pos++;
         
-        if(line[pos] == ')')
-            return;
+        if(pos < line.length()){
+            if(line[pos] == ')')
+                return;
         
-        lines.push_back( line.substr(pos) );
+            lines.push_back( line.substr(pos) );
+        }
         
         std::getline(std::cin, line);
         pos = 0;
@@ -476,7 +299,6 @@ int main(int argc, const char** argv){
     bool multibracket = false;
     //Read lines from input until EOF
     for(std::string line; std::getline(std::cin, line); ){
-        
         
         if(line.find(MULTIBRACKET) == 0){
             multibracket = true;
