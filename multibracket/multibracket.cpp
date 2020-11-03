@@ -227,17 +227,19 @@ public:
             }
         }
         else{
-            if(content.empty() && sub_brackets.size() == 1){
-                if(!root)
-                    out << "*";
+            if(!root && content.empty() && sub_brackets.size() == 1){
+                out << "*";
                 out.incr_indent();
+                
                 sub_brackets.cbegin()->second->print(out);
+                
                 out.decr_indent();
             }
             else{
-                if(!root)
+                if(!root){
                     out << " * ( ";
-                out.incr_indent();
+                    out.incr_indent();
+                }
                 
                 if(!content.empty()){
                     out.paragraph();
@@ -251,14 +253,17 @@ public:
                     }
                 }
                 
-                for(const auto& sub : sub_brackets){
+                for(auto it = sub_brackets.begin(); it != sub_brackets.end(); ){
                     out.paragraph() << "+ ";
-                    sub.second->print(out);
-                    out.paragraph();
+                    it->second->print(out);
+                    
+                    if(++it != sub_brackets.end() || !root)
+                        out.paragraph();
                 }
-                if(!root)
+                if(!root){
                     out << ")";
-                out.decr_indent();
+                    out.decr_indent();
+                }
             }
         }
     }
@@ -323,7 +328,6 @@ int main(int argc, const char** argv){
                         pos++;
                 }
                 if(pos < line.length() && line[pos] == ';'){
-                    out.paragraph();
                     root.print(out, true);
                     (out << ";").flush();
                     
@@ -346,6 +350,9 @@ int main(int argc, const char** argv){
     }
     
     std::cout << "\n";
+    
+    for(auto& [name, lvl] : br_symbols)
+        std::cout << name << ": " << lvl << "\n";
     return 0;
     
 }
