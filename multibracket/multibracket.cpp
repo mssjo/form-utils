@@ -230,17 +230,19 @@ public:
             if(content.empty() && sub_brackets.size() == 1){
                 if(!root)
                     out << "*";
-                out.incr_indent() << "+ ";
+                out.incr_indent();
                 sub_brackets.cbegin()->second->print(out);
                 out.decr_indent();
             }
             else{
                 if(!root)
                     out << " * ( ";
-                out.incr_indent().paragraph();
+                out.incr_indent();
                 
                 if(!content.empty()){
-                    if(content.size() == 1 && content.front()[0] != '-')
+                    out.paragraph();
+                    
+                    if(content.size() == 1 && !is_plusminus(content.front()[0]))
                         out << "+ ";
                     
                     for(const std::string& line : content){
@@ -294,45 +296,54 @@ int main(int argc, const char** argv){
     }
     
     bracket root("");
-    indent_stream out;
+    indent_stream out(std::cout, 0, 3, 8, -2, 79);
+    out << "\n";
     
-    bool multibracket = false;
-    //Read lines from input until EOF
-    for(std::string line; std::getline(std::cin, line); ){
-        
-        if(line.find(MULTIBRACKET) == 0){
-            multibracket = true;
+    try{
+    
+        bool multibracket = false;
+        //Read lines from input until EOF
+        for(std::string line; std::getline(std::cin, line); ){
             
-            size_t pos = std::strlen(MULTIBRACKET);
-            root.parse(line, pos, br_symbols, argc-1);
-            
-            pos++;
-            while(pos < line.length() && std::isspace(line[pos]))
-                pos++;
-            if(pos >= line.length()){
-                if(!std::getline(std::cin, line))
-                    break;
+            if(line.find(MULTIBRACKET) == 0){
+                multibracket = true;
                 
-                pos = 0;
+                size_t pos = std::strlen(MULTIBRACKET);
+                root.parse(line, pos, br_symbols, argc-1);
+                
+                pos++;
                 while(pos < line.length() && std::isspace(line[pos]))
                     pos++;
+                if(pos >= line.length()){
+                    if(!std::getline(std::cin, line))
+                        break;
+                    
+                    pos = 0;
+                    while(pos < line.length() && std::isspace(line[pos]))
+                        pos++;
+                }
+                if(pos < line.length() && line[pos] == ';'){
+                    out.paragraph();
+                    root.print(out, true);
+                    (out << ";").flush();
+                    
+                    root.clear();
+                    multibracket = false;
+                    continue;
+                }
             }
-            if(pos < line.length() && line[pos] == ';'){
-                out.paragraph();
-                root.print(out, true);
-                (out << ";").flush();
-                
-                root.clear();
-                multibracket = false;
-                continue;
-            }
+            else if(!multibracket)
+                std::cout << "\n" << line;
         }
-        else if(!multibracket)
-            std::cout << "\n" << line;
+        
+        if(multibracket)
+            throw std::runtime_error("ERROR: unexpected EOF");
+        
+    } catch (std::runtime_error& e) {
+        std::cout << std::endl;
+        std::cerr << e.what() << std::endl;
+        return 1;
     }
-    
-    if(multibracket)
-        throw std::runtime_error("ERROR: unexpected EOF");
     
     std::cout << "\n";
     return 0;

@@ -17,9 +17,10 @@
  * For most purposes, this map behaves exactly like an @c std::unordered_map with the same
  * template parameters. The complexity of all operations is the same, albeit with a slight
  * time and space overhead. The main difference is that iterators to the map traverse it
- * in the order elements were added, as if the map were a @c std::list into which @c insert 'ed
- * elements are @c push_back 'ed. Existing elements can be modified without modifying their
- * place in the order, but erased elements can not be reinserted in their old locations.
+ * in the order elements were added, as if the map were a @c std::list of key-value pairs
+ * into which inserted elements are pushed back. Existing elements can be modified without 
+ * modifying their place in the order, but erased elements can not be reinserted in their 
+ * old locations.
  */
 template< 
     typename KeyT, 

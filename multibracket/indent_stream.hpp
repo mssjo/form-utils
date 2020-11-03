@@ -25,14 +25,12 @@ namespace detail {
         }
     public:
         
-        size_t max_depth = 80;
-        size_t par_indent = 2;
-        size_t basic_indent = 0;
-        size_t indent_step = 4;
+        size_t max_depth;
+        size_t par_indent;
+        size_t basic_indent;
+        size_t indent_step;
         
-        indent_buf(std::ostream& o = std::cout, size_t ind = 0) : out(o), indent_level(ind) {
-            indent_line();
-        }
+        indent_buf(std::ostream& o = std::cout, size_t ind = 0) : out(o), indent_level(ind) {};
         
         virtual int sync(){
             std::string s = str();
@@ -105,9 +103,16 @@ private:
     }
         
 public:
-    indent_stream(std::ostream& out = std::cout, size_t indent = 0) 
+    indent_stream(std::ostream& out = std::cout, size_t indent = 0,
+        size_t step = 4, size_t b_ind = 0, int p_ind = 4, int max_d = 80
+    ) 
     : std::ostream(new detail::indent_buf(out, indent)) 
-    {}
+    {
+        set_indent_step(step);
+        set_max_depth(max_d);
+        set_basic_indent(b_ind);
+        set_par_indent(p_ind);
+    }
     
     virtual ~indent_stream() {
         indent_buf().sync();
