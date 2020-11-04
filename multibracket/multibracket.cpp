@@ -351,8 +351,6 @@ int main(int argc, const char** argv){
     
     std::cout << "\n";
     
-    for(auto& [name, lvl] : br_symbols)
-        std::cout << name << ": " << lvl << "\n";
     return 0;
     
 }

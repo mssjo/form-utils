@@ -9,8 +9,12 @@
 * "multibracket". Regular brackets will not be affected.
 *
 
-function [_MULTIBRACKET_];
+#ifndef `multibracket'
 
-#define multibracket "multiply left [_MULTIBRACKET_]; bracket [_MULTIBRACKET_] "
+    function [_MULTIBRACKET_];
 
-#define nmultibracket "id [_MULTIBRACKET_] = 1"
+    #define multibracket "multiply left [_MULTIBRACKET_]; bracket [_MULTIBRACKET_] "
+
+    #define nmultibracket "id [_MULTIBRACKET_] = 1"
+    
+#endif
