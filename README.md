@@ -50,7 +50,8 @@ expression =
 the long `a*b*(...)*z` makes all lines unnecessarily crowded, but removing
 either `a,b,(...),z` or `F` from the bracket would make them appear on each 
 line in the long expressions. The only other solution is to restructure your
-expressions manually, or bite the bullet and read them as-is.
+expressions manually, do some clumsy and limited tricks with the `dum_` 
+function, or bite the bullet and read the expressions as-is.
 
 This problem is resolved in a rather hacky way by including multibrackets.
 After making `multibracket` and putting things in the relevant include paths,
@@ -69,7 +70,6 @@ and the output will instead look like
 expression = 
 
    + a*b*(...)*z * (
-   
       + F(aaa) * (
          long expression
       )
@@ -82,8 +82,13 @@ expression =
       )
    );
 ```
-which is vastly more readable. This works in general: separate symbols on the
-same level of indentation by commas, and those on different levels by spaces.
+which is vastly more readable. This works in general: each level of bracketing
+is given as a separate argument to `multibracket`, and symbols on the same level
+are separated by commas (and/or spaces, if the argument is quoted). FORM's '...'
+syntax can be used (e.g. `multibracket "a1,...,a55" "<f1x>,...,<f7x>"`), although 
+quotes may be necessary to avoid confusing the shell. Set notation can not be used,
+although it may be supported in the future.
+
 All symbols that are supplied to the extermal multibracket command must also
 be supplied as arguments to the`` `multibracket'`` macro. All FORM output that
 is not affected by the macro is printed without being changed. All `print` options

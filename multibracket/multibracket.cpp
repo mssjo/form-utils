@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <functional>
 #include <algorithm>
@@ -8,7 +9,8 @@
 #include "indent_stream.hpp"
 
 //Multibracket tag (special symbol output by FORM macro)
-#define MULTIBRACKET "       + [_MULTIBRACKET_]"
+#define MULTIBRACKET_TAG "[_MULTIBRACKET_]"
+#define MULTIBRACKET "       + " MULTIBRACKET_TAG
 
 using list = typename std::list<std::string>;
 
@@ -275,7 +277,70 @@ public:
         sub_brackets.clear();
     }
 };
+
+void parse_bracket_symbols(size_t level, const std::string& symbol_group, 
+                           insertion_order_map< std::string, size_t >& br_symbols)
+{
+
+    size_t pos = 0;
+    auto split_group = split(symbol_group, pos, ',', '[', ']');
+    for(auto it = split_group.begin(); it != split_group.end(); it++){
         
+        //Handle FORM's ... operator
+        //This is cunningly done by invoking FORM's preprocessor on a tiny
+        //temporary file that basically only contains the ... operator to
+        //be expanded. This way, we save some work while ensuring that the
+        //handling is consistent with FORM.
+        if(*it == "..."){
+            //Create temporary file:
+            /*
+             *   * Temporary file for use by multibracket
+             *   #-
+             *   [_MULTIBRACKET_],<*(it-1)>,...,<*(it+1)>;
+             *   .end
+             */
+            //The multibracket tag is used to find the line containing the results
+            std::ofstream tmp(".multibracket_tmp.frm");
+            tmp << "* Temporary file for use by multibracket\n#-\n" MULTIBRACKET_TAG ",";
+            if(it == split_group.begin())
+                throw std::runtime_error("ERROR: empty beginning of ... range");
+            --it;
+            br_symbols.erase(*it);
+            tmp << *it << ",...,";
+            ++it; ++it;
+            if(it == split_group.end())
+                throw std::runtime_error("ERROR: empty end of ... range");
+            tmp << *it << ";\n.end\n";
+            tmp.close();
+            
+            system("form -y .multibracket_tmp.frm > .multibracket_tmp.log");
+            
+            //Find output line, parse it, and ignore the rest
+            //NOTE: FORM doesn't support it (yet), but this is compatible
+            //with nested use of the ... operator!
+            size_t pos;
+            bool valid = false;
+            std::ifstream processed_tmp(".multibracket_tmp.log");
+            for(std::string line; std::getline(processed_tmp, line); ){
+                if((pos = line.find(MULTIBRACKET_TAG)) != std::string::npos){
+                    pos += std::strlen(MULTIBRACKET_TAG) + 1;
+                    
+                    processed_tmp.close();
+                    parse_bracket_symbols(level, line.substr(pos), br_symbols);
+                    valid = true;
+                    break;
+                }
+            }
+            
+            //No output means something went awry
+            if(!valid)
+                throw std::runtime_error("ERROR: improper use of ... operator");
+        }
+        //No ... operator, just insert symbol
+        else            
+            br_symbols[*it] = level;
+    }
+}
 
 /*
  * Main method. Standard input should be a pipe from a FORM program,
@@ -295,9 +360,7 @@ int main(int argc, const char** argv){
     
     //Parse the bracket specifications
     for(int arg = 1; arg < argc; arg++){
-        size_t pos = 0;
-        for(const std::string& br_symbol : split(std::string(argv[arg]), pos, ',', '[', ']'))
-            br_symbols[br_symbol] = arg-1;
+        parse_bracket_symbols(arg-1, std::string(argv[arg]), br_symbols);
     }
     
     bracket root("");
@@ -350,6 +413,10 @@ int main(int argc, const char** argv){
     }
     
     std::cout << "\n";
+    
+//     // For debugging
+//     for(auto& brs : br_symbols)
+//         std::cout << brs.second << ":\t" << brs.first << "\n";
     
     return 0;
     
