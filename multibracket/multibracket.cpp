@@ -15,36 +15,91 @@
 using list = typename std::list<std::string>;
 
 /* 
- * Splits a string s at all occurrences of a delimiter delim,
- * except when it occurs between (possibly nested) parentheses lpar, rpar.
- * If the character end is specified, its first occurrence outside 
- * parentheseses treated as the end of the string.
- * Unbalanced parentheses and empty substrings are ignored.
+ * Splits a string s at all occurrences of any of the characters in delim,
+ * except when they occur between (possibly nested) parentheses. The string
+ * is considered to start at pos, and pos is left as the index of the last
+ * character considered by the method (or as past-the-end).
+ * 
+ * Parentheses are specified through par, in which character 2n is a left
+ * parenthesis, and character 2n+1 is the corresponding right parenthesis
+ * (default: "()[]{}"). Parentheses must be matched, but they may be interleaved
+ * (e.g. "[(])"). This method doesn't care about mismatched parentheses.
+ * 
+ * The method terminates when it reaches the end of the string, or any
+ * of the characters in end (default: ""), or when a right parenthesis
+ * without a corresponding left parenthesis. Like delim, end is ignored
+ * inside parentheses.
+ * 
+ * Empty substrings are ignored.
  */
-list split(const std::string& s, size_t& pos, char delim, char lpar, char rpar, char end = 0)
+list split(const std::string& s, size_t& pos, 
+           const std::string& delim, 
+           const std::string& par = "()[]{}",
+           const std::string& end = "")
 {
     list split;
-    size_t prev = pos, par = 0;
+    
+    if(par.length() % 2)
+        throw std::runtime_error("ERROR: par must consist of matching pairs");
+        
+    bool in_par = false, done = false;
+    std::vector<size_t> par_count(par.length()/2, 0);
+    size_t prev = pos, idx;
     for(;; pos++){
-        //End-of-string always counts as delimiter, 
-        //otherwise delimiters count if not parenthesised
-        if(pos == s.length() || (par == 0 && (s[pos] == delim || s[pos] == end))){
-            std::string sub = s.substr(prev, pos-prev);
-            //Ignore empty substrings
-            if(!sub.empty())
-                split.push_back(sub);
-            
-            prev = pos+1;
-            if(pos == s.length() || s[pos] == end)
-                return split;
+        if(pos >= s.length()){
+            done = true;
+            goto add_sub;
         }
-        //left paren increases parenthetisation level
-        else if(s[pos] == lpar)
-            par++;
-        //ignore right paren if parenthetisation would be negative
-        else if(par > 0 && s[pos] == rpar)
-            par--;
-        //also ignore unclosed parens -- this is not a parenthetisation checker!
+        else if((idx = par.find(s[pos])) != std::string::npos){
+            if(idx % 2){
+                if(par_count[idx / 2] == 0){
+                    done = true;
+                    goto add_sub;
+                }
+                else{
+                    par_count[idx / 2]--;
+                    
+                    if(par_count[idx / 2] == 0){
+                        in_par = false;
+                        for(size_t i = 0; i < par_count.size(); i++){
+                            if(par_count[i] != 0){
+                                in_par = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            else{
+                par_count[idx / 2]++;
+                in_par = true;
+            }
+        }
+        else if(!in_par){
+            if(end.find(s[pos]) != std::string::npos){
+                done = true;
+                goto add_sub;
+            }
+            if(delim.find(s[pos]) != std::string::npos){
+                //done = false;
+                goto add_sub;
+            }
+        }
+        
+        continue;
+        
+        //Yes, goto! The alternative is code duplication, an auxiliary function
+        //shorter than its own argument list, or a really nasty lambda.
+        //This is the neat way to do this.
+        add_sub:
+        std::string sub = s.substr(prev, pos-prev);
+        //Ignore empty substrings
+        if(!sub.empty())
+            split.push_back(sub);
+        
+        prev = pos+1;
+        if(done)
+            return split;
     }
 }
 
@@ -157,7 +212,7 @@ public:
                size_t n_level)
     {
         std::vector<std::string> br_keys(n_level + 1);
-        list symbols = split(line, pos, '*', '[', ']', ' ');
+        list symbols = split(line, pos, "*", "[]", " ");
         
         for(std::string symbol : symbols){
             std::string head = symbol_head(symbol);
@@ -283,7 +338,7 @@ void parse_bracket_symbols(size_t level, const std::string& symbol_group,
 {
 
     size_t pos = 0;
-    auto split_group = split(symbol_group, pos, ',', '[', ']');
+    auto split_group = split(symbol_group, pos, ", ", "[]");
     for(auto it = split_group.begin(); it != split_group.end(); it++){
         
         //Handle FORM's ... operator
@@ -414,9 +469,9 @@ int main(int argc, const char** argv){
     
     std::cout << "\n";
     
-//     // For debugging
-//     for(auto& brs : br_symbols)
-//         std::cout << brs.second << ":\t" << brs.first << "\n";
+    // For debugging
+    for(auto& brs : br_symbols)
+        std::cout << std::string(brs.second, '\t') << brs.first << "\n";
     
     return 0;
     
