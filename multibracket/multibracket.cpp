@@ -298,7 +298,6 @@ public:
                 single_line = sub_brackets.cbegin()->second->print(out);
                 
                 out.decr_indent();
-                
                 return single_line;
             }
             else{
@@ -330,19 +329,8 @@ public:
                     //   ...but not single-line ones (NOTE: this makes expressions more compact)
                     //   ...and not the last one (that is handled later)
                     //   ...however, if a single-line is followed by a mutliple-line, insert blank line.
-                    if(it != sub_brackets.end()){
-                        if(!single_line){             
-                            out.paragraph();
-                        }
-                        else{
-                            //Rather ugly lookahead checking for multiple-line
-                            auto jt = it;
-                            if(++jt != sub_brackets.end() 
-                                && (jt->second->content.size() + jt->second->sub_brackets.size()) > 1
-                            ){
-                                out.paragraph();
-                            }
-                        }
+                    if(it != sub_brackets.end() && (!single_line || !it->second->is_single_line())){             
+                        out.paragraph();
                     }
                 }
                 if(!root){
@@ -350,6 +338,23 @@ public:
                     out.decr_indent();
                 }
                 
+                return false;
+            }
+        }
+    }
+    
+    //Basically a "dry run" of print(out, true)
+    bool is_single_line() const {
+        bool single_line;
+        
+        if(sub_brackets.empty()){
+            return (content.size() > 1);
+        }
+        else{
+            if(content.empty() && sub_brackets.size() == 1){
+                return sub_brackets.cbegin()->second->is_single_line();
+            }
+            else{
                 return false;
             }
         }
@@ -423,7 +428,7 @@ void parse_bracket_symbols(size_t level, const std::string& symbol_group,
         }
         //No ... operator, just insert symbol
         else            
-            br_symbols[*it] = level;
+            br_symbols.insert(std::make_pair(*it, level));
     }
 }
 

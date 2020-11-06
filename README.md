@@ -87,7 +87,8 @@ is given as a separate argument to `multibracket`, and symbols on the same level
 are separated by commas (and/or spaces, if the argument is quoted). FORM's '...'
 syntax can be used (e.g. `multibracket "a1,...,a55" "<f1x>,...,<f7x>"`), although 
 quotes may be necessary to avoid confusing the shell. Set notation can not be used,
-although it may be supported in the future.
+although it may be supported in the future. If a symbol occurs multiple times,
+only its first appearance counts.
 
 All symbols that are supplied to the extermal multibracket command must also
 be supplied as arguments to the`` `multibracket'`` macro. All FORM output that

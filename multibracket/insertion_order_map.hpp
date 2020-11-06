@@ -121,23 +121,23 @@ public:
     std::pair<iterator, bool> insert(const value_type& value){
         auto where = map.find(value.first);
         if(where != map.end()){
-            return std::make_pair(where, false);
+            return std::make_pair(where->second, false);
         }
         else{
             //create new element in back
             elements.push_back( value );
-            return (map[value.first] = --elements.end())->second;
+            return std::make_pair((map[value.first] = --elements.end()), true);
         }         
     }
     std::pair<iterator, bool> insert(value_type&& value){
         auto where = map.find(value.first);
         if(where != map.end()){
-            return std::make_pair(where, false);
+            return std::make_pair(where->second, false);
         }
         else{
             //create new element in back
             elements.push_back( value );
-            return (map[value.first] = --elements.end())->second;
+            return std::make_pair((map[value.first] = --elements.end()), true);
         }         
     }
     template< typename InputIt >
