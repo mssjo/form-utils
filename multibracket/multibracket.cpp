@@ -257,8 +257,11 @@ public:
         //line[pos] is now the closing parenthesis of this expression
     }
     
-    void print(indent_stream& out, bool root = false) const {
+    //Return value is true if printout was single-line
+    // (line breaks due to overlong lines don't count)
+    bool print(indent_stream& out, bool root = false) const {
         out << key;
+        bool single_line;
         
         if(sub_brackets.empty()){
             if(!root)
@@ -275,12 +278,16 @@ public:
                 if(!root)
                     out << ")";
                 out.decr_indent();
+                
+                return false;
             }
             else{
                 out.incr_indent(2) << content.front();
                 if(!root)
                     out << " )";
                 out.decr_indent(2);
+                
+                return true;
             }
         }
         else{
@@ -288,9 +295,11 @@ public:
                 out << "*";
                 out.incr_indent();
                 
-                sub_brackets.cbegin()->second->print(out);
+                single_line = sub_brackets.cbegin()->second->print(out);
                 
                 out.decr_indent();
+                
+                return single_line;
             }
             else{
                 if(!root){
@@ -312,15 +321,23 @@ public:
                 
                 for(auto it = sub_brackets.begin(); it != sub_brackets.end(); ){
                     out.paragraph() << "+ ";
-                    it->second->print(out);
+                    single_line = it->second->print(out);
                     
-                    if(++it != sub_brackets.end() || !root)
+                    ++it;
+                    
+                    //This is a bit confusing. What it does is:
+                    //   sub-brackets are normally separated by an empty line
+                    //   ...but not single-line ones (NOTE: this makes expressions more compact)
+                    //   ...and not the last one (that is handled later)
+                    if(it != sub_brackets.end() && !single_line)
                         out.paragraph();
                 }
                 if(!root){
-                    out << ")";
+                    out.paragraph() << ")";
                     out.decr_indent();
                 }
+                
+                return false;
             }
         }
     }
