@@ -329,8 +329,21 @@ public:
                     //   sub-brackets are normally separated by an empty line
                     //   ...but not single-line ones (NOTE: this makes expressions more compact)
                     //   ...and not the last one (that is handled later)
-                    if(it != sub_brackets.end() && !single_line)
-                        out.paragraph();
+                    //   ...however, if a single-line is followed by a mutliple-line, insert blank line.
+                    if(it != sub_brackets.end()){
+                        if(!single_line){             
+                            out.paragraph();
+                        }
+                        else{
+                            //Rather ugly lookahead checking for multiple-line
+                            auto jt = it;
+                            if(++jt != sub_brackets.end() 
+                                && (jt->second->content.size() + jt->second->sub_brackets.size()) > 1
+                            ){
+                                out.paragraph();
+                            }
+                        }
+                    }
                 }
                 if(!root){
                     out.paragraph() << ")";
@@ -486,9 +499,9 @@ int main(int argc, const char** argv){
     
     std::cout << "\n";
     
-    // For debugging
-    for(auto& brs : br_symbols)
-        std::cout << std::string(brs.second, '\t') << brs.first << "\n";
+//     // For debugging
+//     for(auto& brs : br_symbols)
+//         std::cout << std::string(brs.second, '\t') << brs.first << "\n";
     
     return 0;
     
