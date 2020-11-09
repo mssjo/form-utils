@@ -348,7 +348,7 @@ public:
         bool single_line;
         
         if(sub_brackets.empty()){
-            return (content.size() > 1);
+            return (content.size() <= 1);
         }
         else{
             if(content.empty() && sub_brackets.size() == 1){
