@@ -35,33 +35,39 @@ using list = typename std::list<std::string>;
 list split(const std::string& s, size_t& pos, 
            const std::string& delim, 
            const std::string& par = "()[]{}",
-           const std::string& end = "")
+           const std::string& end = ""
+          )
 {
     list split;
     
     if(par.length() % 2)
         throw std::runtime_error("ERROR: par must consist of matching pairs");
+    size_t npar = par.length() / 2;
         
-    bool in_par = false, done = false;
-    std::vector<size_t> par_count(par.length()/2, 0);
+    bool in_par = false, add_sub = false, done = false;
+    std::vector<size_t> par_count(npar, 0);
     size_t prev = pos, idx;
+
     for(;; pos++){
+        //Treat a single character, sett add_sub = true if it is time to add a new substring
+        //to the list, and done = true if it is time to terminate the function after adding the
+        //final substring.
+        
         if(pos >= s.length()){
             done = true;
-            goto add_sub;
         }
         else if((idx = par.find(s[pos])) != std::string::npos){
-            if(idx % 2){
-                if(par_count[idx / 2] == 0){
+            if(idx % 2){    //right paren
+                if(par_count[idx / 2] == 0){    //final closing paren
                     done = true;
-                    goto add_sub;
                 }
-                else{
+                else{   //just decrement
                     par_count[idx / 2]--;
                     
+                    //Update in_par
                     if(par_count[idx / 2] == 0){
                         in_par = false;
-                        for(size_t i = 0; i < par_count.size(); i++){
+                        for(size_t i = 0; i < npar; i++){
                             if(par_count[i] != 0){
                                 in_par = true;
                                 break;
@@ -70,36 +76,33 @@ list split(const std::string& s, size_t& pos,
                     }
                 }
             }
-            else{
-                par_count[idx / 2]++;
-                in_par = true;
+            else{   //left paren
+                in_par = idx/2;
+                par_count[in_par]++;
             }
         }
-        else if(!in_par){
+        else if(!in_par){    //not parenthesised, look for end or delim
             if(end.find(s[pos]) != std::string::npos){
                 done = true;
-                goto add_sub;
             }
             if(delim.find(s[pos]) != std::string::npos){
                 //done = false;
-                goto add_sub;
+                add_sub = true;
             }
         }
-        
-        continue;
-        
-        //Yes, goto! The alternative is code duplication, an auxiliary function
-        //shorter than its own argument list, or a really nasty lambda.
-        //This is the neat way to do this.
-        add_sub:
-        std::string sub = s.substr(prev, pos-prev);
-        //Ignore empty substrings
-        if(!sub.empty())
-            split.push_back(sub);
-        
-        prev = pos+1;
-        if(done)
-            return split;
+                
+        if(add_sub || done){
+            std::string sub = s.substr(prev, pos-prev);
+            //Ignore empty substrings
+            if(!sub.empty())
+                split.push_back(sub);
+            
+            prev = pos+1;
+            if(done)
+                return split;
+            
+            add_sub = false;
+        }
     }
 }
 
@@ -107,17 +110,17 @@ bool is_plusminus(char c){
     return c == '+' || c == '-';
 }
 
-std::string read_broken_line(std::string& line, size_t& pos){
+std::string read_broken_line(std::string& line, size_t& pos, char endchar, std::istream* in = &std::cin){
     
     //Move ahead to first non-space, assuming properly formatted input
     size_t start = pos;
     while(start < line.length() && std::isspace(line[start]))
         start++;
     
-    //Line is not actually broken, return empty string
+    //Line is not actually broken, read new line and return empty string
     if(start >= line.length()){
         pos = 0;
-        std::getline(std::cin, line);
+        std::getline(*in, line);
         
         return "";
     }
@@ -135,7 +138,7 @@ std::string read_broken_line(std::string& line, size_t& pos){
             
             //Read next line, skipping initial whitespace and assuming proper input
             start = 0;
-            if(!std::getline(std::cin, line))
+            if(!std::getline(*in, line))
                 throw std::runtime_error("ERROR: unexpected EOF");
             
             while(start < line.length() && std::isspace(line[start]))
@@ -145,7 +148,7 @@ std::string read_broken_line(std::string& line, size_t& pos){
             if(pos < line.length() && is_plusminus(line[pos]))
                 full_line += ' ';
         }
-        
+                
         //Handle formal names
         if(line[pos] == '[')
             fpar++;
@@ -153,19 +156,18 @@ std::string read_broken_line(std::string& line, size_t& pos){
             fpar--;
         //Handle parentheses, but only if not inside formal name
         else if(fpar == 0){
-            if(line[pos] == '(')
-                par++;
-            if(line[pos] == ')'){
-                if(par > 0)
-                    par--;
-                else{
-                    //Found the closing parenthesis!
-                    //Complete the line without including the close-paren,
-                    //and leave pos pointing to it.
+            if(par == 0 && line[pos] == endchar){
+                //Found the end!
+                //Complete the line without including the endchar,
+                //and leave pos pointing to it.
+                if(pos > start)
                     full_line += line.substr(start, pos-1 - start);
-                    return full_line;
-                }
-            }
+                return full_line;   
+            }            
+            else if(line[pos] == '(')
+                par++;
+            else if(line[pos] == ')')
+                par--;
         }
     }
     
@@ -247,7 +249,7 @@ public:
         
         //Skip "* ( "
         pos += 5;
-        std::string inlin = read_broken_line( line, pos );
+        std::string inlin = read_broken_line( line, pos, ')' );
         
         if(inlin.empty())
             read_multiple_lines( line, pos, br->content );
@@ -293,11 +295,11 @@ public:
         else{
             if(!root && content.empty() && sub_brackets.size() == 1){
                 out << "*";
-                out.incr_indent();
+//                 out.incr_indent();
                 
                 single_line = sub_brackets.cbegin()->second->print(out);
                 
-                out.decr_indent();
+//                 out.decr_indent();
                 return single_line;
             }
             else{
@@ -400,7 +402,7 @@ void parse_bracket_symbols(size_t level, const std::string& symbol_group,
             ++it; ++it;
             if(it == split_group.end())
                 throw std::runtime_error("ERROR: empty end of ... range");
-            tmp << *it << ";\n.end\n";
+            tmp << *it << ";\n#+\n#+\n.end\n";
             tmp.close();
             
             system("form -y .multibracket_tmp.frm > .multibracket_tmp.log");
@@ -415,8 +417,15 @@ void parse_bracket_symbols(size_t level, const std::string& symbol_group,
                 if((pos = line.find(MULTIBRACKET_TAG)) != std::string::npos){
                     pos += std::strlen(MULTIBRACKET_TAG) + 1;
                     
+                    parse_bracket_symbols(
+                        level, 
+                        //This is a bit hacky, but does the job nicely when the expansion is long
+                        read_broken_line(line, pos, '#', &processed_tmp),
+                        br_symbols
+                    );
+                    
                     processed_tmp.close();
-                    parse_bracket_symbols(level, line.substr(pos), br_symbols);
+                    
                     valid = true;
                     break;
                 }
