@@ -9,7 +9,7 @@
 #include "indent_stream.hpp"
 
 //Multibracket tag (special symbol output by FORM macro)
-#define MULTIBRACKET_TAG "[_MULTIBRACKET_]"
+#define MULTIBRACKET_TAG "[_MB_]"
 #define MULTIBRACKET "       + " MULTIBRACKET_TAG
 
 using list = typename std::list<std::string>;
@@ -219,7 +219,6 @@ public:
                 
         for(std::string symbol : symbols){
             std::string head = symbol_head(symbol);
-            std::cout << "### " << head << "\n";
             auto br_symbol = br_symbols.find(head);
             
             size_t lvl;
@@ -515,10 +514,10 @@ int main(int argc, const char** argv){
     
     std::cout << "\n";
     
-    // For debugging
-    for(auto& brs : br_symbols)
-        std::cout << std::string(brs.second, '\t') << brs.first << "\n";
-    
+//     // For debugging
+//     for(auto& brs : br_symbols)
+//         std::cout << std::string(brs.second, '\t') << brs.first << "\n";
+//     
     return 0;
     
 }

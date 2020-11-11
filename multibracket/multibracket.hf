@@ -11,10 +11,10 @@
 
 #ifndef `multibracket'
 
-    function [_MULTIBRACKET_];
+    function [_MB_];
 
-    #define multibracket "multiply left [_MULTIBRACKET_]; bracket [_MULTIBRACKET_] "
+    #define multibracket "multiply left [_MB_]; bracket [_MB_] "
 
-    #define nmultibracket "id [_MULTIBRACKET_] = 1"
+    #define nmultibracket "id [_MB_] = 1"
     
 #endif
