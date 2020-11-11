@@ -77,8 +77,8 @@ list split(const std::string& s, size_t& pos,
                 }
             }
             else{   //left paren
-                in_par = idx/2;
-                par_count[in_par]++;
+                in_par = true;
+                par_count[idx / 2]++;
             }
         }
         else if(!in_par){    //not parenthesised, look for end or delim
@@ -191,7 +191,8 @@ void read_multiple_lines(std::string& line, size_t& pos, list& lines){
 }
 
 std::string symbol_head(const std::string& sym){
-    return sym.substr(0, sym.find_first_of("(^"));
+    size_t pos = 0;
+    return split(sym, pos, "^(", "[]").front();
 }
         
 struct bracket {
@@ -215,9 +216,10 @@ public:
     {
         std::vector<std::string> br_keys(n_level + 1);
         list symbols = split(line, pos, "*", "[]", " ");
-        
+                
         for(std::string symbol : symbols){
             std::string head = symbol_head(symbol);
+            std::cout << "### " << head << "\n";
             auto br_symbol = br_symbols.find(head);
             
             size_t lvl;
@@ -513,9 +515,9 @@ int main(int argc, const char** argv){
     
     std::cout << "\n";
     
-//     // For debugging
-//     for(auto& brs : br_symbols)
-//         std::cout << std::string(brs.second, '\t') << brs.first << "\n";
+    // For debugging
+    for(auto& brs : br_symbols)
+        std::cout << std::string(brs.second, '\t') << brs.first << "\n";
     
     return 0;
     
