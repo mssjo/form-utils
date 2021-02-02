@@ -26,7 +26,7 @@ using list = typename std::list<std::string>;
  * (e.g. "[(])"). This method doesn't care about mismatched parentheses.
  * 
  * The method terminates when it reaches the end of the string, or any
- * of the characters in end (default: ""), or when a right parenthesis
+ * of the characters in end (default: ""), or when a right parenthesis is found
  * without a corresponding left parenthesis. Like delim, end is ignored
  * inside parentheses.
  * 
@@ -139,7 +139,7 @@ std::string read_broken_line(std::string& line, size_t& pos, char endchar, std::
             //Read next line, skipping initial whitespace and assuming proper input
             start = 0;
             if(!std::getline(*in, line))
-                throw std::runtime_error("ERROR: unexpected EOF");
+                throw std::runtime_error("ERROR: unexpected EOF in line \"" + full_line + "\"");
             
             while(start < line.length() && std::isspace(line[start]))
                 start++;
@@ -215,7 +215,7 @@ public:
                size_t n_level)
     {
         std::vector<std::string> br_keys(n_level + 1);
-        list symbols = split(line, pos, "*", "[]", " ");
+        list symbols = split(line, pos, "*", "[]()", " ");
                 
         for(std::string symbol : symbols){
             std::string head = symbol_head(symbol);
@@ -389,7 +389,7 @@ void parse_bracket_symbols(size_t level, const std::string& symbol_group,
             /*
              *   * Temporary file for use by multibracket
              *   #-
-             *   [_MULTIBRACKET_],<*(it-1)>,...,<*(it+1)>;
+             *   [_MB_],<*(it-1)>,...,<*(it+1)>;
              *   .end
              */
             //The multibracket tag is used to find the line containing the results
@@ -445,7 +445,7 @@ void parse_bracket_symbols(size_t level, const std::string& symbol_group,
 /*
  * Main method. Standard input should be a pipe from a FORM program,
  * or read from a FORM log file. It will simply echo its input to
- * standard output until a multibracket tag [_MULTIBRACKET_] is found,
+ * standard output until a multibracket tag [_MB_] is found,
  * after which it reformats the expression using a similar style to
  * FORM's bracket feature, but using multiple indentation levels for
  * greater readability.
@@ -503,8 +503,11 @@ int main(int argc, const char** argv){
                 std::cout << "\n" << line;
         }
         
-        if(multibracket)
+        if(multibracket){
+            std::cout << "Error occurred, printing results so far:\n";
+            root.print(out, true);
             throw std::runtime_error("ERROR: unexpected EOF");
+        }
         
     } catch (std::runtime_error& e) {
         std::cout << std::endl;

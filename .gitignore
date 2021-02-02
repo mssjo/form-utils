@@ -1,1 +1,8 @@
+
 multibracket/multibracket
+
+katelistings/syntaxes
+katelistings/themes
+katelistings/CMakeFiles
+katelistings/*.cmake
+katelistings/language_map.xml
