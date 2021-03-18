@@ -21,7 +21,7 @@ namespace detail {
             if(depth > max_depth)
                 throw std::runtime_error("ERROR: indent larger than maximum depth");
             
-            std::cout << std::string(depth, ' ');
+            out << std::string(depth, ' ');
         }
     public:
         

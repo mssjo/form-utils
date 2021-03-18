@@ -100,3 +100,5 @@ The tags needed for multibracket formatting are not automatically removed.
 You need to use the macro `` `nmultibracket'``, which works as an executable 
 satement, to remove them so that expressions can subsequently be printed
 without multibracketing, if you so wish.
+
+KNOWN BUG: If the outside-the-bracket part is so long that FORM line-wraps it (i.e. if the " * (" ends up on a different line than the " + ", multibracket will not work (or rather, it will appear to work but will fail to balance parentheses). To avoid this, never multibracket FORM log filed (which are hard-wrapped) but instead feed FORM output directly into it, or via a file written on your conditions.
