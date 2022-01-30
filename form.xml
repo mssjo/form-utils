@@ -48,7 +48,7 @@
                 <WordDetect String="set" insensitive="true" attribute="Set" context="Definition" />
                 <DetectChar char="." attribute="Module" context="Module" />
                 <DetectChar char="*" column="0" attribute="Comment" context="Comment" />
-                <DetectChar char=";" attribute="Normal" context="StartExpr" />
+                <DetectChar char=";" attribute="Normal" context="AfterSemicolon" />
                 <DetectChar char="`" attribute="PreprocVar" context="PreprocVar" />
                 <RegExpr String="#\w*" attribute="Preprocessor" context="Preprocessor" />
                 <RegExpr String="\s+" attribute="Normal" context="#stay" />
@@ -58,7 +58,7 @@
                 <DetectChar char="`" attribute="PreprocVar" context="PreprocVar" />
                 <DetectChar char="[" attribute="FormalName" context="FormalName" />
                 <DetectChar char="&quot;" attribute="String" context="String" />
-                <DetectChar char=";" attribute="Normal" context="StartExpr" />
+                <DetectChar char=";" attribute="Normal" context="AfterSemicolon" />
                 <RegExpr String="[a-z][a-z0-9_]*_(?!\w)" insensitive="true" attribute="Builtin" context="#stay" />
                 <RegExpr String="\w+\?" attribute="Wildcard" context="#stay" />
                 <RegExpr String="\?\w+" attribute="ArgWildcard" context="#stay" />
@@ -76,7 +76,7 @@
                 <RegExpr String="\\\s*\n" attribute="Normal" context="#stay" />
             </context>
             <context name="Statement" attribute="Statement" lineEndContext="Normal">
-                <DetectChar char=";" attribute="Normal" context="StartExpr" />
+                <DetectChar char=";" attribute="Normal" context="AfterSemicolon" />
                 <DetectChar char="(" attribute="Normal" context="Normal" />
                 <RegExpr String="\s+" attribute="Normal" context="Normal" />
             </context>
@@ -88,17 +88,17 @@
                 <DetectChar char="`" attribute="PreprocVar" context="PreprocVar" />
             </context>
             <context name="Definition" attribute="Definition" lineEndContext="#stay" >
-                <DetectChar char=";" attribute="Normal" context="StartExpr" />
+                <DetectChar char=";" attribute="Normal" context="AfterSemicolon" />
                 <DetectChar char="[" attribute="FormalName" context="FormalName" />
                 <DetectChar char="=" attribute="Normal" context="Normal" />
                 <DetectChar char="`" attribute="PreprocVar" context="PreprocVar" />
             </context>
             <context name="Module" attribute="Module" lineEndContext="StartExpr" >
                 <DetectChar char=":" attribute="Normal" context="ModuleMessage" />
-                <DetectChar char=";" attribute="Normal" context="StartExpr" />
+                <DetectChar char=";" attribute="Normal" context="AfterSemicolon" />
             </context>
             <context name="ModuleMessage" attribute="String" lineEndContext="#stay" >
-                <DetectChar char=";" attribute="Normal" context="#pop" />
+                <DetectChar char=";" attribute="Normal" context="AfterSemicolon" />
                 <DetectChar char="`" attribute="PreprocVar" context="PreprocVar" />
             </context>
             <context name="PreprocVar" attribute="PreprocVar" lineEndContext="#pop" >
@@ -109,6 +109,9 @@
                 <DetectChar char="&quot;" attribute="String" context="#pop"/>
                 <Detect2Chars char="\" char1="&quot;" attribute="String" context="#stay" />
                 <DetectChar char="`" attribute="PreprocVar" context="PreprocVar" />
+            </context>
+            <context name="AfterSemicolon" attribute="Normal" lineEndContext="StartExpr" fallthroughContext="StartExpr">
+                <DetectChar char="*" attribute="Comment" context="Comment"/>
             </context>
         </contexts>
         <itemDatas>
