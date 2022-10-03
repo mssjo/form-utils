@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<language name="FORM" version="1" kateversion="5.55" section="Scientific" extensions="*.frm;*.hf;.prc">
+<language name="FORM" version="1" kateversion="5.55" section="Scientific" extensions="*.frm;*.hf;*.prc">
 
     <highlighting>
         <list name="DefKeywords">
